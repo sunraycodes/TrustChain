@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { QrCode, ShieldCheck, ShieldAlert, AlertOctagon, RefreshCw, Zap, Dna, CheckCircle, MapPin, Sparkles } from 'lucide-react';
 import VerificationMesh from '../components/VerificationMesh';
 import ChainTimeline from '../components/ChainTimeline';
+import QRScanner from '../components/QRScanner';
 
 export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }) {
   const [productId, setProductId] = useState(selectedProductId);
@@ -61,6 +62,17 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
     }
   };
 
+  const handleQRScan = (scannedData) => {
+    // QR code may contain a product ID directly or a URL with the ID
+    let extractedId = scannedData;
+    // Try to extract product ID from URL format: https://trustchain.app/verify/MED-789204-X
+    const urlMatch = scannedData.match(/verify\/([A-Z0-9-]+)/i);
+    if (urlMatch) {
+      extractedId = urlMatch[1];
+    }
+    setProductId(extractedId);
+  };
+
   const isGenuine = verificationResult?.genuine;
   const isSpoiled = verificationResult?.status === 'SPOILED';
 
@@ -102,6 +114,15 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
             </button>
           </div>
         </div>
+      </div>
+
+      {/* QR Camera Scanner */}
+      <div className="glass-card rounded-3xl p-6 border border-slate-800">
+        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-widest mb-3">
+          <QrCode className="w-4 h-4" />
+          <span>Camera QR Scanner</span>
+        </div>
+        <QRScanner onScan={handleQRScan} disabled={loading} />
       </div>
 
       {/* Pitch Demonstration Trigger */}

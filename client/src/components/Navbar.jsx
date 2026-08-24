@@ -1,11 +1,12 @@
 import React from 'react';
 import { ShieldCheck, Factory, Truck, Building2, AlertTriangle, QrCode } from 'lucide-react';
 
-export default function Navbar({ activeTab, setActiveTab }) {
+export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout }) {
   const tabs = [
     { id: 'consumer', label: 'Scan & Verify PWA', icon: QrCode, highlight: true },
     { id: 'manufacturer', label: 'Manufacturer Portal', icon: Factory },
     { id: 'distributor', label: 'Distributor & Logistics', icon: Truck },
+    { id: 'pharmacy', label: 'Pharmacy Portal', icon: Building2 },
     { id: 'regulator', label: 'Regulator Dashboard', icon: AlertTriangle }
   ];
 
@@ -32,29 +33,47 @@ export default function Navbar({ activeTab, setActiveTab }) {
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex space-x-1 sm:space-x-2">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
+          <div className="flex items-center space-x-3">
+            {/* Navigation Tabs */}
+            <nav className="flex space-x-1 sm:space-x-2">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? tab.highlight
+                          ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 glow-emerald'
+                          : 'bg-slate-800 text-white border border-slate-700'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <span className="hidden md:inline">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Auth Status */}
+            {currentUser && (
+              <div className="hidden lg:flex items-center space-x-2 pl-3 border-l border-slate-800">
+                <div className="text-right">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase">{currentUser.role}</div>
+                  <div className="text-xs text-slate-300 font-mono">{currentUser.id}</div>
+                </div>
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? tab.highlight
-                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 glow-emerald'
-                        : 'bg-slate-800 text-white border border-slate-700'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-                  }`}
+                  onClick={onLogout}
+                  className="px-2 py-1 text-[10px] font-bold text-slate-500 hover:text-rose-400 border border-slate-800 hover:border-rose-500/30 rounded-lg transition-all"
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                  <span className="hidden md:inline">{tab.label}</span>
+                  Logout
                 </button>
-              );
-            })}
-          </nav>
+              </div>
+            )}
+          </div>
 
         </div>
       </div>
