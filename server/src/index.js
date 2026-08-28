@@ -42,13 +42,32 @@ app.use('/api/bounties', bountyRoutes);
 app.use('/api/ai', aiCopilotRoutes);
 app.use('/api', demoRoutes);
 
-// Serve built React client in production (single URL for both frontend + backend)
+const fs = require('fs');
+
+// Serve built React client if available; otherwise serve API root status
 const clientBuildPath = path.join(__dirname, '../../client/dist');
-if (config.NODE_ENV === 'production') {
+const indexHtmlPath = path.join(clientBuildPath, 'index.html');
+
+if (fs.existsSync(indexHtmlPath)) {
   app.use(express.static(clientBuildPath));
   // All non-API routes serve the React app (client-side routing)
   app.get('*', (req, res) => {
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
+    res.sendFile(indexHtmlPath);
+  });
+} else {
+  // If running standalone API on Render (with React hosted on Vercel)
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'OK',
+      system: 'TrustChain Ledger API Server',
+      message: 'TrustChain API is live. Frontend is hosted separately on Vercel.',
+      endpoints: {
+        health: '/api/health',
+        products: '/api/products',
+        verify: '/api/products/verify',
+        alerts: '/api/alerts'
+      }
+    });
   });
 }
 
