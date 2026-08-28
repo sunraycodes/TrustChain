@@ -1,7 +1,20 @@
 import React, { useState } from 'react';
-import { Factory, QrCode, Dna, Thermometer, Plus, CheckCircle, Copy, Download } from 'lucide-react';
+import {
+  Factory,
+  QrCode,
+  Dna,
+  Thermometer,
+  Plus,
+  CheckCircle,
+  Copy,
+  Download,
+  Sparkles,
+  RefreshCw,
+  Layers
+} from 'lucide-react';
+import { hexToBinary } from '../components/PackagingDnaAnalyzer';
 
-export default function ManufacturerDashboard() {
+export default function ManufacturerDashboard({ token }) {
   const [formData, setFormData] = useState({
     id: `MED-${Math.floor(100000 + Math.random() * 900000)}-X`,
     batch_id: `BATCH-2026-${Math.floor(10 + Math.random() * 90)}`,
@@ -17,6 +30,24 @@ export default function ManufacturerDashboard() {
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState('');
 
+  // Substrate presets
+  const SUBSTRATES = [
+    { id: 'sub_1', name: 'Micro-Fiber Security Paper', phash: 'a8f9c13b21e45678' },
+    { id: 'sub_2', name: 'Holographic Guilloche Substrate', phash: 'd4e2f89012ab34cd' },
+    { id: 'sub_3', name: 'Fluorescent Embedded Fibers', phash: '7c8b9a01ef234567' }
+  ];
+
+  const generateRandomDna = () => {
+    let randHex = '';
+    const chars = '0123456789abcdef';
+    for (let i = 0; i < 16; i++) {
+      randHex += chars[Math.floor(Math.random() * chars.length)];
+    }
+    setFormData((prev) => ({ ...prev, initial_phash: randHex }));
+  };
+
+  const binaryBits = hexToBinary(formData.initial_phash);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -25,7 +56,10 @@ export default function ManufacturerDashboard() {
     try {
       const res = await fetch('/api/products/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           ...formData,
           min_temp: parseFloat(formData.min_temp),
@@ -48,6 +82,7 @@ export default function ManufacturerDashboard() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
@@ -106,18 +141,64 @@ export default function ManufacturerDashboard() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
-              <span>Packaging DNA pHash</span>
-              <span className="text-[10px] text-emerald-400">Micro-texture perceptual hash</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-medium text-slate-400">Packaging DNA Micro-Texture</label>
+              <button
+                type="button"
+                onClick={generateRandomDna}
+                className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center space-x-1 font-bold"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Generate Unique Seed</span>
+              </button>
+            </div>
+
+            {/* Substrate Presets */}
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
+              {SUBSTRATES.map((sub) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, initial_phash: sub.phash })}
+                  className={`p-1.5 rounded-lg border text-[10px] text-left transition-all truncate ${
+                    formData.initial_phash === sub.phash
+                      ? 'border-cyan-400 bg-cyan-500/10 text-cyan-300 font-bold'
+                      : 'border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  {sub.name}
+                </button>
+              ))}
+            </div>
+
             <input
               type="text"
               value={formData.initial_phash}
               onChange={(e) => setFormData({ ...formData, initial_phash: e.target.value })}
-              className="w-full bg-slate-900 border border-slate-700 text-emerald-400 font-mono text-xs rounded-xl p-2.5 focus:border-emerald-500 focus:outline-none"
+              className="w-full bg-slate-900 border border-slate-700 text-emerald-400 font-mono text-xs rounded-xl p-2.5 focus:border-emerald-500 focus:outline-none mb-2"
+              placeholder="16-character hex hash (64-bit)"
               required
             />
+
+            {/* Live 8x8 Master Matrix Preview */}
+            <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80">
+              <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-1.5 flex justify-between">
+                <span>Genesis DNA 8×8 Bit Blueprint</span>
+                <span className="text-emerald-400 font-bold">64 Bits</span>
+              </div>
+              <div className="grid grid-cols-8 gap-1 max-w-[160px]">
+                {Array.from({ length: 64 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-square rounded-[3px] bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[8px] font-mono flex items-center justify-center font-bold"
+                  >
+                    {binaryBits[i] || '0'}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
+
 
           <div className="grid grid-cols-2 gap-3">
             <div>

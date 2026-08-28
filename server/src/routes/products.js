@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { query, get } = require('../db/db');
 const { createGenesisBlock, getChain, verifyChainIntegrity } = require('../ledger/chainEngine');
+const { computePerceptualHash, hexTo64BitBinary, evaluatePackagingDna } = require('../engines/packagingDna');
 const { authenticateToken, requireRole } = require('../middleware/auth');
+
 
 /**
  * POST /api/products/register
@@ -78,9 +80,6 @@ router.get('/:id/chain', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const chain = await getChain(productId);
-    const integrity = await verifyChainIntegrity(productId);
-
     res.json({
       product,
       integrity,
@@ -92,4 +91,37 @@ router.get('/:id/chain', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/products/compute-phash
+ * Computes a 64-bit perceptual hash and binary matrix from base64 image or sample texture.
+ * Public — used during scanning or registration preview.
+ */
+router.post('/compute-phash', async (req, res) => {
+  try {
+    const { image_data, baseline_phash } = req.body;
+    if (!image_data) {
+      return res.status(400).json({ error: 'Missing image_data payload.' });
+    }
+
+    const phash = computePerceptualHash(image_data);
+    const bits = hexTo64BitBinary(phash);
+
+    let evaluation = null;
+    if (baseline_phash) {
+      evaluation = evaluatePackagingDna(baseline_phash, phash);
+    }
+
+    res.json({
+      success: true,
+      phash,
+      bits,
+      evaluation
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
+
+

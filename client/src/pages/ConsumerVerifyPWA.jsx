@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { QrCode, ShieldCheck, ShieldAlert, AlertOctagon, RefreshCw, Zap, Dna, CheckCircle, MapPin, Sparkles } from 'lucide-react';
+import {
+  QrCode,
+  ShieldCheck,
+  ShieldAlert,
+  AlertOctagon,
+  RefreshCw,
+  Zap,
+  Dna,
+  CheckCircle,
+  MapPin,
+  Sparkles,
+  Camera
+} from 'lucide-react';
 import VerificationMesh from '../components/VerificationMesh';
 import ChainTimeline from '../components/ChainTimeline';
 import QRScanner from '../components/QRScanner';
+import PackagingDnaAnalyzer from '../components/PackagingDnaAnalyzer';
 
 export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }) {
   const [productId, setProductId] = useState(selectedProductId);
@@ -10,13 +23,15 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
   const [verificationResult, setVerificationResult] = useState(null);
   const [chain, setChain] = useState([]);
   const [simulateMode, setSimulateMode] = useState(false);
+  const [scanTab, setScanTab] = useState('qr'); // 'qr' | 'dna'
+  const [activeScannedPhash, setActiveScannedPhash] = useState(null);
 
   useEffect(() => {
-    fetchVerification();
+    fetchVerification(false, activeScannedPhash);
     fetchChain();
   }, [productId]);
 
-  const fetchVerification = async (isCounterfeitSimulation = false) => {
+  const fetchVerification = async (isCounterfeitSimulation = false, customPhash = null) => {
     setLoading(true);
     try {
       if (isCounterfeitSimulation) {
@@ -29,6 +44,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
         setVerificationResult(data.result);
         setSimulateMode(true);
       } else {
+        const phashToSend = customPhash !== undefined ? customPhash : activeScannedPhash;
         const res = await fetch('/api/products/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -36,7 +52,8 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
             product_id: productId,
             actor_id: 'CONSUMER_PWA_USER',
             latitude: 28.6139,
-            longitude: 77.2090
+            longitude: 77.2090,
+            scanned_phash: phashToSend || undefined
           })
         });
         const data = await res.json();
@@ -65,7 +82,6 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
   const handleQRScan = (scannedData) => {
     // QR code may contain a product ID directly or a URL with the ID
     let extractedId = scannedData;
-    // Try to extract product ID from URL format: https://trustchain.app/verify/MED-789204-X
     const urlMatch = scannedData.match(/verify\/([A-Z0-9-]+)/i);
     if (urlMatch) {
       extractedId = urlMatch[1];
@@ -73,8 +89,17 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
     setProductId(extractedId);
   };
 
+  const handleSelectDnaPhash = (phash) => {
+    setActiveScannedPhash(phash);
+    fetchVerification(false, phash);
+  };
+
   const isGenuine = verificationResult?.genuine;
   const isSpoiled = verificationResult?.status === 'SPOILED';
+  const baselineGenesisPhash =
+    verificationResult?.layers?.packagingDna?.baselinePhash ||
+    chain[0]?.fingerprint_hash ||
+    'a8f9c13b21e45678';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-16">
@@ -105,7 +130,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
               placeholder="Enter Product ID"
             />
             <button
-              onClick={() => fetchVerification(false)}
+              onClick={() => fetchVerification(false, activeScannedPhash)}
               disabled={loading}
               className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold flex items-center space-x-1"
             >
@@ -116,13 +141,55 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
         </div>
       </div>
 
-      {/* QR Camera Scanner */}
-      <div className="glass-card rounded-3xl p-6 border border-slate-800">
-        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-widest mb-3">
-          <QrCode className="w-4 h-4" />
-          <span>Camera QR Scanner</span>
+      {/* Dual Scanner Interface (QR Code & Packaging DNA) */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2 bg-slate-900/80 p-1 rounded-2xl border border-slate-800">
+            <button
+              onClick={() => setScanTab('qr')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
+                scanTab === 'qr'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <QrCode className="w-4 h-4" />
+              <span>1. Scan QR Code</span>
+            </button>
+
+            <button
+              onClick={() => setScanTab('dna')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
+                scanTab === 'dna'
+                  ? 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-md shadow-cyan-500/20'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Dna className="w-4 h-4" />
+              <span>2. Scan Packaging DNA (pHash)</span>
+            </button>
+          </div>
+
+          <span className="text-[11px] font-mono text-slate-500 hidden sm:inline">
+            Unclonable Dual Physical-Digital Verification
+          </span>
         </div>
-        <QRScanner onScan={handleQRScan} disabled={loading} />
+
+        {scanTab === 'qr' ? (
+          <div className="glass-card rounded-3xl p-6 border border-slate-800">
+            <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-widest mb-3">
+              <QrCode className="w-4 h-4" />
+              <span>Camera QR Scanner</span>
+            </div>
+            <QRScanner onScan={handleQRScan} disabled={loading} />
+          </div>
+        ) : (
+          <PackagingDnaAnalyzer
+            baselinePhash={baselineGenesisPhash}
+            currentScannedPhash={activeScannedPhash}
+            onSelectScannedPhash={handleSelectDnaPhash}
+          />
+        )}
       </div>
 
       {/* Pitch Demonstration Trigger */}
@@ -139,7 +206,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
 
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => fetchVerification(false)}
+            onClick={() => fetchVerification(false, activeScannedPhash)}
             className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
               !simulateMode
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
@@ -162,6 +229,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
       </div>
 
       {/* Verification Status Hero Card */}
+
       {verificationResult && (
         <div
           className={`glass-card rounded-3xl p-6 border transition-all duration-500 ${
