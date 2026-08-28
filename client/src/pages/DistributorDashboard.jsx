@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Truck, ArrowRight, ShieldCheck, Thermometer, MapPin, Key, Lock, CheckCircle, Loader, Eye, EyeOff } from 'lucide-react';
+import { BASE_URL } from '../services/api';
 
 export default function DistributorDashboard() {
   const [formData, setFormData] = useState({
@@ -36,7 +37,7 @@ export default function DistributorDashboard() {
         parsedSigs = [formData.counter_signatures];
       }
 
-      const res = await fetch('/api/products/transfer', {
+      const res = await fetch(`${BASE_URL}/products/transfer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

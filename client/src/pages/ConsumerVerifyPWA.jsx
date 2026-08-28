@@ -4,6 +4,7 @@ import VerificationMesh from '../components/VerificationMesh';
 import ChainTimeline from '../components/ChainTimeline';
 import QRScanner from '../components/QRScanner';
 import BountyLeaderboard from '../components/BountyLeaderboard';
+import { BASE_URL } from '../services/api';
 
 export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }) {
   const [productId, setProductId] = useState(selectedProductId);
@@ -23,7 +24,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
     setLoading(true);
     try {
       if (isCounterfeitSimulation) {
-        const res = await fetch('/api/demo/simulate-counterfeit', {
+        const res = await fetch(`${BASE_URL}/demo/simulate-counterfeit`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ product_id: productId })
@@ -32,7 +33,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
         setVerificationResult(data.result);
         setSimulateMode(true);
       } else {
-        const res = await fetch('/api/products/verify', {
+        const res = await fetch(`${BASE_URL}/products/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -55,7 +56,7 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
 
   const fetchChain = async () => {
     try {
-      const res = await fetch(`/api/products/${productId}/chain`);
+      const res = await fetch(`${BASE_URL}/products/${productId}/chain`);
       if (res.ok) {
         const data = await res.json();
         setChain(data.chain || []);

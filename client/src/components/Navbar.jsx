@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Factory, Truck, Building2, AlertTriangle, QrCode } from 'lucide-react';
+import { BASE_URL } from '../services/api';
 
 export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout }) {
   const tabs = [
@@ -14,7 +15,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
 
   useEffect(() => {
     if (currentUser?.id) {
-      fetch(`/api/bounties/me?actor_id=${currentUser.id}`)
+      fetch(`${BASE_URL}/bounties/me?actor_id=${currentUser.id}`)
         .then(res => res.json())
         .then(data => {
           if (data.score !== undefined) setBountyScore(data.score);

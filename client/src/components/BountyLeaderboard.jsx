@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Star, ShieldAlert, Medal } from 'lucide-react';
+import { BASE_URL } from '../services/api';
 
 export default function BountyLeaderboard() {
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/bounties/leaderboard')
+    fetch(`${BASE_URL}/bounties/leaderboard`)
       .then(res => res.json())
       .then(data => {
         setLeaders(data.leaderboard || []);

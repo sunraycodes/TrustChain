@@ -1,4 +1,6 @@
-const BASE_URL = '/api';
+const rawBase = import.meta.env.VITE_API_URL || '/api';
+const cleanBase = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
+export const BASE_URL = cleanBase.endsWith('/api') ? cleanBase : `${cleanBase}/api`;
 
 // ---------- Token Management ----------
 
@@ -29,7 +31,7 @@ function clearCurrentUser() {
 
 // ---------- Core Fetch Wrapper ----------
 
-async function fetchApi(endpoint, options = {}) {
+export async function fetchApi(endpoint, options = {}) {
   const token = getToken();
 
   const headers = {

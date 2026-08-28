@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Building2, PackageCheck, Pill, Thermometer, ShieldCheck, ArrowDownToLine, AlertTriangle } from 'lucide-react';
-import { transferCustody } from '../services/api';
+import { transferCustody, BASE_URL } from '../services/api';
 
 export default function PharmacyDashboard({ token }) {
   const [activeSection, setActiveSection] = useState('receive');
@@ -38,7 +38,7 @@ export default function PharmacyDashboard({ token }) {
       let parsedSigs = [];
       try { parsedSigs = JSON.parse(receiveForm.counter_signatures); } catch { parsedSigs = [receiveForm.counter_signatures]; }
 
-      const res = await fetch('/api/products/transfer', {
+      const res = await fetch(`${BASE_URL}/products/transfer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export default function PharmacyDashboard({ token }) {
     setDispenseLoading(true);
     setDispenseMsg('');
     try {
-      const res = await fetch('/api/products/transfer', {
+      const res = await fetch(`${BASE_URL}/products/transfer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

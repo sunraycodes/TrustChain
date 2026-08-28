@@ -13,6 +13,7 @@ import {
   Layers
 } from 'lucide-react';
 import { hexToBinary } from '../components/PackagingDnaAnalyzer';
+import { BASE_URL } from '../services/api';
 
 export default function ManufacturerDashboard({ token }) {
   const [formData, setFormData] = useState({
@@ -54,7 +55,7 @@ export default function ManufacturerDashboard({ token }) {
     setMsg('');
 
     try {
-      const res = await fetch('/api/products/register', {
+      const res = await fetch(`${BASE_URL}/products/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

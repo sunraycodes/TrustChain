@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, ShieldCheck, Globe, MapPin, RefreshCw, Bot, Send, Sparkles, Cpu } from 'lucide-react';
 import AlertHeatmap from '../components/AlertHeatmap';
+import { BASE_URL } from '../services/api';
 
 const SUGGESTED_QUERIES = [
   'How many counterfeits were detected?',
@@ -38,7 +39,7 @@ export default function RegulatorDashboard() {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/alerts');
+      const res = await fetch(`${BASE_URL}/alerts`);
       if (res.ok) {
         const data = await res.json();
         setAlerts(data.alerts || []);
@@ -60,7 +61,7 @@ export default function RegulatorDashboard() {
     setChatLoading(true);
 
     try {
-      const res = await fetch('/api/ai/query', {
+      const res = await fetch(`${BASE_URL}/ai/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text })
