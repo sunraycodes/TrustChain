@@ -4,7 +4,7 @@
   "description": "TrustChain - Physically-Fused, Self-Alerting Hash-Chained Ledger",
   "scripts": {
     "dev": "npx --yes concurrently --names \"SERVER,CLIENT\" --prefix-colors \"cyan,green\" \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd server && npm start",
+    "dev:server": "cd server && npx nodemon src/index.js",
     "dev:client": "cd client && npm run dev",
     "build": "cd client && npm install && npm run build",
     "start": "node start.js",
