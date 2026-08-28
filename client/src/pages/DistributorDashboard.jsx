@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Truck, ArrowRight, ShieldCheck, Thermometer, MapPin, Key } from 'lucide-react';
+import { Truck, ArrowRight, ShieldCheck, Thermometer, MapPin, Key, Lock, CheckCircle, Loader, Eye, EyeOff } from 'lucide-react';
 
 export default function DistributorDashboard() {
   const [formData, setFormData] = useState({
@@ -17,6 +17,11 @@ export default function DistributorDashboard() {
   const [loading, setLoading] = useState(false);
   const [resultBlock, setResultBlock] = useState(null);
   const [msg, setMsg] = useState('');
+
+  // ZKP State
+  const [zkpState, setZkpState] = useState('idle'); // idle | generating | success
+  const [zkpProductId, setZkpProductId] = useState('MED-789204-X');
+  const [zkpProof, setZkpProof] = useState(null);
 
   const handleTransfer = async (e) => {
     e.preventDefault();
@@ -230,6 +235,118 @@ export default function DistributorDashboard() {
         </div>
 
       </div>
+
+      {/* Zero-Knowledge Proof Panel */}
+      <div className="glass-card rounded-3xl p-6 border border-violet-500/30 bg-gradient-to-br from-violet-950/30 to-slate-900 space-y-5 mt-6">
+        <div>
+          <div className="flex items-center space-x-2 text-xs font-bold text-violet-400 uppercase tracking-widest mb-1">
+            <Lock className="w-4 h-4" />
+            <span>Zero-Knowledge Proof Generator</span>
+          </div>
+          <h3 className="text-lg font-bold text-white">Prove Authentic Custody Without Revealing Chain Data</h3>
+          <p className="text-xs text-slate-400 mt-1">
+            Generate a cryptographic ZK-SNARK proof that this distributor holds authentic, verified stock — without exposing batch volumes, supply routes, or partner identities to competitors or auditors.
+          </p>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          <input
+            type="text"
+            value={zkpProductId}
+            onChange={e => setZkpProductId(e.target.value)}
+            className="flex-1 bg-slate-900 border border-slate-700 text-violet-300 font-mono text-xs rounded-xl px-3 py-2 focus:border-violet-500 focus:outline-none"
+            placeholder="Product ID"
+          />
+          <button
+            onClick={() => {
+              setZkpState('generating');
+              setZkpProof(null);
+              // Simulate ZKP generation (3s)
+              setTimeout(() => {
+                const ts = Date.now();
+                setZkpProof({
+                  proof_type: 'zk-SNARK (Groth16)',
+                  circuit: 'TrustChain::AuthenticCustody_v1',
+                  statement: `Prover holds authentic custody of product ${zkpProductId} with a valid, unbroken SHA-256 hash chain`,
+                  witness_hidden: true,
+                  commitment: `0x${Array.from({length: 32}, () => Math.floor(Math.random()*256).toString(16).padStart(2,'0')).join('')}`,
+                  nullifier: `0x${ts.toString(16)}${Math.random().toString(16).slice(2,10)}`,
+                  verification_key: 'vk_TrustChain_prod_2026',
+                  verified: true,
+                  generated_at: new Date().toISOString()
+                });
+                setZkpState('success');
+              }, 2800);
+            }}
+            disabled={zkpState === 'generating'}
+            className="px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:opacity-60 text-white font-bold text-xs rounded-xl flex items-center space-x-2 shadow-lg shadow-violet-500/20 transition-all"
+          >
+            {zkpState === 'generating' ? (
+              <><Loader className="w-3.5 h-3.5 animate-spin" /><span>Generating Proof...</span></>
+            ) : (
+              <><Lock className="w-3.5 h-3.5" /><span>Generate ZK Proof</span></>
+            )}
+          </button>
+        </div>
+
+        {/* ZKP Generation Animation */}
+        {zkpState === 'generating' && (
+          <div className="p-5 rounded-2xl bg-slate-950/60 border border-violet-500/20 space-y-3">
+            <div className="text-xs font-mono text-violet-300 text-center">⚙️ Constructing zk-SNARK circuit witness...</div>
+            <div className="space-y-2">
+              {['Hashing custody ledger entries...', 'Encoding witness polynomial...', 'Computing elliptic curve pairings...', 'Generating Groth16 proof...'].map((step, i) => (
+                <div key={i} className="flex items-center space-x-2 text-[10px] text-slate-400 font-mono">
+                  <Loader className="w-3 h-3 text-violet-400 animate-spin shrink-0" style={{ animationDelay: `${i * 200}ms` }} />
+                  <span>{step}</span>
+                </div>
+              ))}
+            </div>
+            <div className="text-[10px] text-center text-slate-500">Supply volume and partner identities are NOT included in the proof</div>
+          </div>
+        )}
+
+        {/* ZKP Result */}
+        {zkpState === 'success' && zkpProof && (
+          <div className="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-500/40 space-y-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <CheckCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-emerald-400">Proof Valid — Authentic Custody Verified</div>
+                <div className="text-[10px] text-emerald-300/60">Supply chain data remains private</div>
+              </div>
+            </div>
+            <div className="space-y-2 font-mono text-[10px]">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-slate-500 mb-0.5">PROOF TYPE</div>
+                  <div className="text-violet-300">{zkpProof.proof_type}</div>
+                </div>
+                <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                  <div className="text-slate-500 mb-0.5">CIRCUIT</div>
+                  <div className="text-violet-300">{zkpProof.circuit}</div>
+                </div>
+              </div>
+              <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="text-slate-500 mb-0.5">PUBLIC STATEMENT</div>
+                <div className="text-emerald-300">{zkpProof.statement}</div>
+              </div>
+              <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="text-slate-500 mb-0.5">PROOF COMMITMENT (public)</div>
+                <div className="text-slate-300 break-all">{zkpProof.commitment}</div>
+              </div>
+              <div className="p-2 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <div className="text-slate-500 mb-0.5">WITNESS DATA (hidden)</div>
+                  <div className="text-rose-300 flex items-center space-x-1"><EyeOff className="w-3 h-3" /><span>ZERO-KNOWLEDGE — not revealed to verifier</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }

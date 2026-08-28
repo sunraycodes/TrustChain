@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const config = require('./config');
 
 const { initDatabase, query, get } = require('./db/db');
@@ -10,6 +11,8 @@ const productRoutes = require('./routes/products');
 const custodyRoutes = require('./routes/custody');
 const verifyRoutes = require('./routes/verify');
 const alertRoutes = require('./routes/alerts');
+const bountyRoutes = require('./routes/bounties');
+const aiCopilotRoutes = require('./routes/aiCopilot');
 const demoRoutes = require('./routes/demo');
 
 const app = express();
@@ -35,7 +38,19 @@ app.use('/api/products', productRoutes);
 app.use('/api/products', custodyRoutes);
 app.use('/api/products', verifyRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/bounties', bountyRoutes);
+app.use('/api/ai', aiCopilotRoutes);
 app.use('/api', demoRoutes);
+
+// Serve built React client in production (single URL for both frontend + backend)
+const clientBuildPath = path.join(__dirname, '../../client/dist');
+if (config.NODE_ENV === 'production') {
+  app.use(express.static(clientBuildPath));
+  // All non-API routes serve the React app (client-side routing)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 // Start Server
 app.listen(config.PORT, async () => {
@@ -51,7 +66,7 @@ app.listen(config.PORT, async () => {
     for (const actor of demoActors) {
       const existing = await get(`SELECT id FROM actors WHERE id = ?`, [actor.id]);
       if (!existing) {
-        await query(`INSERT INTO actors (id, name, role, password_hash) VALUES (?, ?, ?, ?)`, [actor.id, actor.name, actor.role, 'demo']);
+        await query(`INSERT INTO actors (id, name, role, password_hash, bounty_score) VALUES (?, ?, ?, ?, ?)`, [actor.id, actor.name, actor.role, 'demo', 0]);
       }
     }
   } catch (e) {

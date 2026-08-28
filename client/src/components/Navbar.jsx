@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Factory, Truck, Building2, AlertTriangle, QrCode } from 'lucide-react';
 
 export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout }) {
@@ -9,6 +9,19 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
     { id: 'pharmacy', label: 'Pharmacy Portal', icon: Building2 },
     { id: 'regulator', label: 'Regulator Dashboard', icon: AlertTriangle }
   ];
+
+  const [bountyScore, setBountyScore] = useState(0);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetch(`/api/bounties/me?actor_id=${currentUser.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.score !== undefined) setBountyScore(data.score);
+        })
+        .catch(err => console.error('Failed to fetch bounty score:', err));
+    }
+  }, [currentUser]);
 
   return (
     <header className="sticky top-0 z-50 glass-nav">
@@ -61,9 +74,17 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
             {/* Auth Status */}
             {currentUser && (
               <div className="hidden lg:flex items-center space-x-2 pl-3 border-l border-slate-800">
-                <div className="text-right">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">{currentUser.role}</div>
-                  <div className="text-xs text-slate-300 font-mono">{currentUser.id}</div>
+                <div className="text-right flex items-center space-x-3">
+                  <div className="hidden xl:block text-right pr-3 border-r border-slate-700">
+                    <div className="text-[10px] font-bold text-amber-500 uppercase flex items-center justify-end space-x-1">
+                      <span>Trust Score</span>
+                    </div>
+                    <div className="text-sm font-bold text-amber-400">{bountyScore} <span className="text-[10px] text-amber-500/70">PTS</span></div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">{currentUser.role}</div>
+                    <div className="text-xs text-slate-300 font-mono">{currentUser.id}</div>
+                  </div>
                 </div>
                 <button
                   onClick={onLogout}
