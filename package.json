@@ -7,7 +7,7 @@
     "dev:server": "cd server && npm start",
     "dev:client": "cd client && npm run dev",
     "build": "cd client && npm install && npm run build",
-    "start": "cd server && npm install && node src/index.js",
+    "start": "node start.js",
     "install:all": "cd server && npm install && cd ../client && npm install"
   }
 }
