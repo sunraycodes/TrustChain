@@ -3,6 +3,7 @@ const { evaluatePackagingDna } = require('./engines/packagingDna');
 const { evaluateImpossibleTravel } = require('./engines/impossibleTravel');
 const { evaluateColdChain } = require('./engines/coldChain');
 const { evaluateSwarmConsensus } = require('./engines/swarmConsensus');
+const { awardAnomalyBounty } = require('./engines/bounties');
 const { get, query } = require('./db/db');
 
 /**
@@ -161,6 +162,12 @@ async function runMasterVerification({
 
     // Update Product Status in database
     await query(`UPDATE products SET status = ? WHERE id = ?`, [overallStatus, product_id]);
+    
+    // Award bounties if anomalies detected
+    await awardAnomalyBounty(actor_id, overallStatus, failedRules);
+  } else if (overallStatus === 'SPOILED') {
+    // Also award for spoiled even if genuine
+    await awardAnomalyBounty(actor_id, overallStatus, failedRules);
   }
 
   // Record scan block to ledger if genuine or spoiled

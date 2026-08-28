@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { QrCode, ShieldCheck, ShieldAlert, AlertOctagon, RefreshCw, Zap, Dna, CheckCircle, MapPin, Sparkles } from 'lucide-react';
+import { QrCode, ShieldCheck, ShieldAlert, AlertOctagon, RefreshCw, Zap, Dna, CheckCircle, MapPin, Sparkles, Wifi, Radio } from 'lucide-react';
 import VerificationMesh from '../components/VerificationMesh';
 import ChainTimeline from '../components/ChainTimeline';
 import QRScanner from '../components/QRScanner';
+import BountyLeaderboard from '../components/BountyLeaderboard';
 
 export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }) {
   const [productId, setProductId] = useState(selectedProductId);
@@ -10,6 +11,8 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
   const [verificationResult, setVerificationResult] = useState(null);
   const [chain, setChain] = useState([]);
   const [simulateMode, setSimulateMode] = useState(false);
+  const [scanMode, setScanMode] = useState('qr'); // 'qr' | 'nfc'
+  const [nfcState, setNfcState] = useState('idle'); // 'idle' | 'scanning' | 'read'
 
   useEffect(() => {
     fetchVerification();
@@ -116,13 +119,115 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
         </div>
       </div>
 
-      {/* QR Camera Scanner */}
+      {/* Scan Mode Toggle */}
       <div className="glass-card rounded-3xl p-6 border border-slate-800">
-        <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-widest mb-3">
-          <QrCode className="w-4 h-4" />
-          <span>Camera QR Scanner</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2 text-xs font-bold text-emerald-400 uppercase tracking-widest">
+            <Radio className="w-4 h-4" />
+            <span>Scan Method</span>
+          </div>
+          <div className="flex items-center space-x-1 bg-slate-900 rounded-xl p-1 border border-slate-800">
+            <button
+              onClick={() => setScanMode('qr')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                scanMode === 'qr' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              <span>Camera QR</span>
+            </button>
+            <button
+              onClick={() => { setScanMode('nfc'); setNfcState('idle'); }}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                scanMode === 'nfc' ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Wifi className="w-3.5 h-3.5" />
+              <span>NFC Tap</span>
+            </button>
+          </div>
         </div>
-        <QRScanner onScan={handleQRScan} disabled={loading} />
+
+        {scanMode === 'qr' ? (
+          <QRScanner onScan={handleQRScan} disabled={loading} />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 space-y-6">
+            {/* NFC Radar Animation */}
+            <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+              {/* Ripple rings */}
+              {nfcState === 'scanning' && [1, 2, 3].map(i => (
+                <div
+                  key={i}
+                  className="absolute rounded-full border-2 border-cyan-400/40"
+                  style={{
+                    width: 60 + i * 40,
+                    height: 60 + i * 40,
+                    animation: `ping 1.5s ease-out ${i * 0.3}s infinite`,
+                    opacity: 0
+                  }}
+                />
+              ))}
+              {/* Core NFC icon */}
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl transition-all duration-500 ${
+                nfcState === 'read' ? 'bg-emerald-500 shadow-emerald-500/30 scale-110' :
+                nfcState === 'scanning' ? 'bg-cyan-600 shadow-cyan-500/30 animate-pulse' :
+                'bg-slate-800 border border-slate-700'
+              }`}>
+                <Wifi className={`w-10 h-10 ${
+                  nfcState === 'read' ? 'text-white' :
+                  nfcState === 'scanning' ? 'text-white' :
+                  'text-slate-500'
+                }`} />
+              </div>
+            </div>
+
+            <div className="text-center space-y-1">
+              {nfcState === 'idle' && (
+                <>
+                  <div className="text-sm font-bold text-slate-300">Ready to Tap</div>
+                  <div className="text-xs text-slate-500">Hold device near the product&apos;s NFC tamper seal</div>
+                </>
+              )}
+              {nfcState === 'scanning' && (
+                <>
+                  <div className="text-sm font-bold text-cyan-400 animate-pulse">Reading NFC Tag...</div>
+                  <div className="text-xs text-slate-400">Authenticating tamper seal & physical fingerprint</div>
+                </>
+              )}
+              {nfcState === 'read' && (
+                <>
+                  <div className="text-sm font-bold text-emerald-400">✅ NFC Tag Read Successfully</div>
+                  <div className="text-xs text-slate-400 font-mono">{productId}</div>
+                </>
+              )}
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setNfcState('scanning');
+                  setTimeout(() => {
+                    setNfcState('read');
+                    fetchVerification(false);
+                  }, 2000);
+                }}
+                disabled={nfcState === 'scanning' || loading}
+                className="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-cyan-500/20 flex items-center space-x-2 transition-all"
+              >
+                <Wifi className="w-4 h-4" />
+                <span>{nfcState === 'scanning' ? 'Reading...' : 'Simulate NFC Tap'}</span>
+              </button>
+              {nfcState !== 'idle' && (
+                <button
+                  onClick={() => setNfcState('idle')}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs rounded-xl border border-slate-700 transition-all"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Pitch Demonstration Trigger */}
@@ -232,11 +337,19 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
           </div>
 
           {!isGenuine && (
-            <div className="mt-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
-              <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>
-                <strong>Silent Regulatory Trip-Wire Triggered:</strong> Background alert dispatched to National Regulatory Authorities with exact GPS location ({verificationResult.latest_block?.latitude || 28.61}, {verificationResult.latest_block?.longitude || 77.20}) and batch audit history.
-              </span>
+            <div className="mt-4 space-y-3">
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
+                <ShieldAlert className="w-4 h-4 text-rose-400 shrink-0" />
+                <span>
+                  <strong>Silent Regulatory Trip-Wire Triggered:</strong> Background alert dispatched to National Regulatory Authorities with exact GPS location ({verificationResult.latest_block?.latitude || 28.61}, {verificationResult.latest_block?.longitude || 77.20}) and batch audit history.
+                </span>
+              </div>
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center space-x-2 glow-amber animate-pulse">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>
+                  <strong>Community Trust Mesh Alert:</strong> You have been awarded a Trust Score Bounty (+50 pts) for protecting the community and reporting this suspicious scan.
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -249,6 +362,11 @@ export default function ConsumerVerifyPWA({ selectedProductId = 'MED-789204-X' }
 
       {/* Immutable Ledger Timeline */}
       <ChainTimeline chain={chain} />
+
+      {/* Community Bounty Leaderboard */}
+      <div className="pt-6">
+        <BountyLeaderboard />
+      </div>
 
     </div>
   );
