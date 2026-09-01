@@ -5,12 +5,15 @@ import ManufacturerDashboard from './pages/ManufacturerDashboard';
 import DistributorDashboard from './pages/DistributorDashboard';
 import PharmacyDashboard from './pages/PharmacyDashboard';
 import RegulatorDashboard from './pages/RegulatorDashboard';
-import { login as apiLogin, logout as apiLogout, getCurrentUser, getToken } from './services/api';
-import { ShieldCheck, LogIn } from 'lucide-react';
+import { login as apiLogin, logout as apiLogout, getCurrentUser, getToken, checkServerHealth } from './services/api';
+import { ShieldCheck, LogIn, Sparkles, Loader } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('consumer');
   const [selectedProductId, setSelectedProductId] = useState('MED-789204-X');
+
+  // Server health state
+  const [serverStatus, setServerStatus] = useState('checking'); // 'checking' | 'waking' | 'online' | 'offline'
 
   // Auth state
   const [currentUser, setCurrentUser] = useState(getCurrentUser());
@@ -19,6 +22,41 @@ export default function App() {
   const [loginForm, setLoginForm] = useState({ actor_id: '', password: 'password123' });
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
+
+  // Health check on mount to wake up Render instance if in standby
+  useEffect(() => {
+    let isMounted = true;
+    let timeoutId;
+
+    // If server takes longer than 2.5s to respond, it is waking up from free-tier standby
+    timeoutId = setTimeout(() => {
+      if (isMounted) setServerStatus(prev => prev === 'checking' ? 'waking' : prev);
+    }, 2500);
+
+    const ping = async () => {
+      const res = await checkServerHealth();
+      if (!isMounted) return;
+      clearTimeout(timeoutId);
+      if (res.online) {
+        setServerStatus('online');
+      } else {
+        // Retry in 5s if waking up
+        setServerStatus('waking');
+        setTimeout(ping, 5000);
+      }
+    };
+
+    ping();
+
+    // Periodic heartbeat every 45 seconds to keep Render awake
+    const interval = setInterval(ping, 45000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Roles that require auth
   const protectedTabs = ['manufacturer', 'distributor', 'pharmacy', 'regulator'];
@@ -80,7 +118,15 @@ export default function App() {
         setActiveTab={handleTabChange}
         currentUser={currentUser}
         onLogout={handleLogout}
+        serverStatus={serverStatus}
       />
+
+      {serverStatus === 'waking' && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border-b border-amber-500/30 px-4 py-2 text-center text-xs text-amber-200 flex items-center justify-center space-x-2">
+          <Loader className="w-3.5 h-3.5 animate-spin text-amber-400" />
+          <span><strong>Waking Ledger Node:</strong> The backend instance is spinning up from standby (~30s). Initial cryptographic connection will establish automatically.</span>
+        </div>
+      )}
 
       <main className="flex-1 px-4 sm:px-6 lg:px-8 pt-6">
         {needsAuth ? (

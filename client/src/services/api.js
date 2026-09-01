@@ -57,6 +57,21 @@ export async function fetchApi(endpoint, options = {}) {
   return data;
 }
 
+// ---------- Health Check API ----------
+
+export async function checkServerHealth() {
+  try {
+    const res = await fetch(`${BASE_URL}/health`, { method: 'GET' });
+    if (res.ok) {
+      const data = await res.json();
+      return { online: true, data };
+    }
+    return { online: false, status: res.status };
+  } catch (err) {
+    return { online: false, error: err.message };
+  }
+}
+
 // ---------- Auth API ----------
 
 export async function login(actor_id, password) {

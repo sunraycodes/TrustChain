@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Factory, Truck, Building2, AlertTriangle, QrCode } from 'lucide-react';
 import { BASE_URL } from '../services/api';
 
-export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout }) {
+export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout, serverStatus = 'checking' }) {
   const tabs = [
     { id: 'consumer', label: 'Scan & Verify PWA', icon: QrCode, highlight: true },
     { id: 'manufacturer', label: 'Manufacturer Portal', icon: Factory },
@@ -40,6 +40,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
                 <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                   SHA-256 Mesh
                 </span>
+                {serverStatus === 'online' && (
+                  <span className="hidden sm:inline-flex items-center space-x-1.5 text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Node Online</span>
+                  </span>
+                )}
+                {serverStatus === 'waking' && (
+                  <span className="inline-flex items-center space-x-1.5 text-[10px] font-mono text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    <span>Waking Ledger Node (~30s)...</span>
+                  </span>
+                )}
               </div>
               <p className="text-xs text-slate-400 font-medium hidden sm:block">
                 Physically-Fused, Self-Alerting Verification Ledger
