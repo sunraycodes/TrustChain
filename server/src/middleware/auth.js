@@ -1,11 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
-/**
- * Generates a JWT token for an authenticated actor.
- * @param {Object} actor - { id, name, role }
- * @returns {string} Signed JWT token
- */
 function generateToken(actor) {
   return jwt.sign(
     { actor_id: actor.id, name: actor.name, role: actor.role },
@@ -14,13 +9,9 @@ function generateToken(actor) {
   );
 }
 
-/**
- * Express middleware: verifies JWT from Authorization header.
- * Attaches decoded user to req.user on success.
- */
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
+  const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ error: 'Authentication required. Provide a Bearer token.' });
@@ -35,11 +26,6 @@ function authenticateToken(req, res, next) {
   }
 }
 
-/**
- * Express middleware factory: restricts access to specific roles.
- * Usage: requireRole('MANUFACTURER', 'REGULATOR')
- * @param  {...string} allowedRoles - Roles permitted to access the route
- */
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {

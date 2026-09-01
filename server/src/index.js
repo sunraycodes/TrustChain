@@ -5,7 +5,6 @@ const config = require('./config');
 
 const { initDatabase, query, get } = require('./db/db');
 
-// Route modules
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const custodyRoutes = require('./routes/custody');
@@ -20,19 +19,12 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Initialize database
 initDatabase();
 
-// ----------------------------------------------------
-// Health check
-// ----------------------------------------------------
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', system: 'TrustChain Ledger Server', timestamp: new Date().toISOString() });
 });
 
-// ----------------------------------------------------
-// Mount Route Modules
-// ----------------------------------------------------
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/products', custodyRoutes);

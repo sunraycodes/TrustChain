@@ -3,10 +3,6 @@ const router = express.Router();
 const { query, get } = require('../db/db');
 const { runMasterVerification } = require('../verificationPipeline');
 
-/**
- * POST /api/db/seed
- * Seeds demo actor accounts into the database.
- */
 router.post('/db/seed', async (req, res) => {
   try {
     const demoActors = [
@@ -33,21 +29,16 @@ router.post('/db/seed', async (req, res) => {
   }
 });
 
-/**
- * POST /api/demo/simulate-counterfeit
- * Triggers a counterfeit scan simulation for live pitch demonstrations.
- */
 router.post('/demo/simulate-counterfeit', async (req, res) => {
   try {
     const { product_id = 'MED-789204-X' } = req.body;
 
-    // Run verification with cloned QR parameters (Mismatched packaging DNA + Impossible travel coordinates)
     const counterfeitScan = await runMasterVerification({
       product_id,
       actor_id: 'COUNTERFEITER_SCANNER',
-      latitude: 51.5074, // London (5000+ km away instantly)
+      latitude: 51.5074,
       longitude: -0.1278,
-      scanned_phash: 'ffffffffffffffff', // Complete packaging DNA mismatch
+      scanned_phash: 'ffffffffffffffff',
       record_scan_block: false
     });
 

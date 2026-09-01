@@ -4,11 +4,6 @@ const { get } = require('../db/db');
 const { appendBlock } = require('../ledger/chainEngine');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
-/**
- * POST /api/products/transfer
- * Records a custody handoff / transfer block on the hash-chain.
- * Protected: DISTRIBUTOR or PHARMACY role required.
- */
 router.post('/transfer', authenticateToken, requireRole('DISTRIBUTOR', 'PHARMACY'), async (req, res) => {
   try {
     const {

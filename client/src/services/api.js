@@ -2,8 +2,6 @@ const rawBase = import.meta.env.VITE_API_URL || '/api';
 const cleanBase = rawBase.endsWith('/') ? rawBase.slice(0, -1) : rawBase;
 export const BASE_URL = cleanBase.endsWith('/api') ? cleanBase : `${cleanBase}/api`;
 
-// ---------- Token Management ----------
-
 function getToken() {
   return localStorage.getItem('trustchain_token');
 }
@@ -28,8 +26,6 @@ function setCurrentUser(user) {
 function clearCurrentUser() {
   localStorage.removeItem('trustchain_user');
 }
-
-// ---------- Core Fetch Wrapper ----------
 
 export async function fetchApi(endpoint, options = {}) {
   const token = getToken();
@@ -57,8 +53,6 @@ export async function fetchApi(endpoint, options = {}) {
   return data;
 }
 
-// ---------- Health Check API ----------
-
 export async function checkServerHealth() {
   try {
     const res = await fetch(`${BASE_URL}/health`, { method: 'GET' });
@@ -71,8 +65,6 @@ export async function checkServerHealth() {
     return { online: false, error: err.message };
   }
 }
-
-// ---------- Auth API ----------
 
 export async function login(actor_id, password) {
   const data = await fetchApi('/auth/login', {
@@ -96,8 +88,6 @@ export function logout() {
 
 export { getToken, getCurrentUser };
 
-// ---------- Products API ----------
-
 export async function registerProduct(productData) {
   return fetchApi('/products/register', {
     method: 'POST',
@@ -109,16 +99,12 @@ export async function fetchChain(productId) {
   return fetchApi(`/products/${productId}/chain`);
 }
 
-// ---------- Custody API ----------
-
 export async function transferCustody(transferData) {
   return fetchApi('/products/transfer', {
     method: 'POST',
     body: JSON.stringify(transferData)
   });
 }
-
-// ---------- Verification API ----------
 
 export async function verifyProduct(verificationData) {
   return fetchApi('/products/verify', {
@@ -127,8 +113,6 @@ export async function verifyProduct(verificationData) {
   });
 }
 
-// ---------- Demo API ----------
-
 export async function simulateCounterfeit(product_id) {
   return fetchApi('/demo/simulate-counterfeit', {
     method: 'POST',
@@ -136,13 +120,9 @@ export async function simulateCounterfeit(product_id) {
   });
 }
 
-// ---------- Alerts API ----------
-
 export async function fetchAlerts() {
   return fetchApi('/alerts');
 }
-
-// ---------- Seed API ----------
 
 export async function seedDatabase() {
   return fetchApi('/db/seed', { method: 'POST' });

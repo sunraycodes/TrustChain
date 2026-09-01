@@ -2,11 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { runMasterVerification } = require('../verificationPipeline');
 
-/**
- * POST /api/products/verify
- * Executes 4-layer verification pipeline on a product scan.
- * Public — no auth required (consumers must be able to verify freely).
- */
 router.post('/verify', async (req, res) => {
   try {
     const {

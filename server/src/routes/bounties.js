@@ -3,10 +3,7 @@ const { query, get } = require('../db/db');
 
 const router = express.Router();
 
-// Get the current user's bounty score
 router.get('/me', async (req, res) => {
-  // In a real app, this would use the actor_id from the verified JWT token.
-  // For the hackathon demo, we'll pass actor_id as a query param.
   const { actor_id } = req.query;
 
   if (!actor_id) {

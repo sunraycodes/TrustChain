@@ -6,11 +6,6 @@ const { computePerceptualHash, hexTo64BitBinary, evaluatePackagingDna } = requir
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
 
-/**
- * POST /api/products/register
- * Manufacturer Genesis Block — registers a new product and appends genesis block.
- * Protected: MANUFACTURER role required.
- */
 router.post('/register', authenticateToken, requireRole('MANUFACTURER'), async (req, res) => {
   try {
     const {
@@ -31,7 +26,6 @@ router.post('/register', authenticateToken, requireRole('MANUFACTURER'), async (
       return res.status(400).json({ error: 'Missing required fields: id, batch_id, name' });
     }
 
-    // Check for duplicate
     const existing = await get(`SELECT id FROM products WHERE id = ?`, [id]);
     if (existing) {
       return res.status(400).json({ error: `Product with ID ${id} already exists.` });
@@ -43,7 +37,6 @@ router.post('/register', authenticateToken, requireRole('MANUFACTURER'), async (
       [id, batch_id, name, manufacturer_id, initial_phash, min_temp, max_temp]
     );
 
-    // Create Genesis Block
     const genesisBlock = await createGenesisBlock({
       product_id: id,
       actor_id: manufacturer_id,
@@ -66,11 +59,6 @@ router.post('/register', authenticateToken, requireRole('MANUFACTURER'), async (
   }
 });
 
-/**
- * GET /api/products/:id/chain
- * Retrieves full block chain history for a product.
- * Public — no auth required.
- */
 router.get('/:id/chain', async (req, res) => {
   try {
     const productId = req.params.id;
@@ -94,11 +82,6 @@ router.get('/:id/chain', async (req, res) => {
   }
 });
 
-/**
- * POST /api/products/compute-phash
- * Computes a 64-bit perceptual hash and binary matrix from base64 image or sample texture.
- * Public — used during scanning or registration preview.
- */
 router.post('/compute-phash', async (req, res) => {
   try {
     const { image_data, baseline_phash } = req.body;
