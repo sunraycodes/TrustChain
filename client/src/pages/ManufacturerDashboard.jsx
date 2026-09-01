@@ -59,7 +59,7 @@ export default function ManufacturerDashboard({ token }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token || localStorage.getItem('trustchain_token') ? { Authorization: `Bearer ${token || localStorage.getItem('trustchain_token')}` } : {})
         },
         body: JSON.stringify({
           ...formData,

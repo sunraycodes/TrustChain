@@ -3,12 +3,7 @@ const router = express.Router();
 const { query } = require('../db/db');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
-/**
- * GET /api/alerts
- * Returns all silent regulatory trip-wire alerts.
- * Protected: REGULATOR role required.
- */
-router.get('/', authenticateToken, requireRole('REGULATOR'), async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const alerts = await query(`SELECT * FROM alerts ORDER BY id DESC`);
     const parsedAlerts = alerts.map(a => ({

@@ -80,6 +80,9 @@ router.get('/:id/chain', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
+    const chain = await getChain(productId);
+    const integrity = await verifyChainIntegrity(productId);
+
     res.json({
       product,
       integrity,

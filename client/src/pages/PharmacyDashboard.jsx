@@ -42,7 +42,7 @@ export default function PharmacyDashboard({ token }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token || localStorage.getItem('trustchain_token') ? { Authorization: `Bearer ${token || localStorage.getItem('trustchain_token')}` } : {})
         },
         body: JSON.stringify({
           ...receiveForm,
@@ -78,7 +78,7 @@ export default function PharmacyDashboard({ token }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
+          ...(token || localStorage.getItem('trustchain_token') ? { Authorization: `Bearer ${token || localStorage.getItem('trustchain_token')}` } : {})
         },
         body: JSON.stringify({
           product_id: dispenseForm.product_id,

@@ -39,7 +39,12 @@ export default function RegulatorDashboard() {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${BASE_URL}/alerts`);
+      const authToken = localStorage.getItem('trustchain_token');
+      const res = await fetch(`${BASE_URL}/alerts`, {
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         setAlerts(data.alerts || []);

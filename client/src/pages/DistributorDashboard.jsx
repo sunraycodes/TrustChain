@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Truck, ArrowRight, ShieldCheck, Thermometer, MapPin, Key, Lock, CheckCircle, Loader, Eye, EyeOff } from 'lucide-react';
 import { BASE_URL } from '../services/api';
 
-export default function DistributorDashboard() {
+export default function DistributorDashboard({ token }) {
   const [formData, setFormData] = useState({
     product_id: 'MED-789204-X',
     event_type: 'CUSTODY_TRANSFER',
@@ -37,9 +37,13 @@ export default function DistributorDashboard() {
         parsedSigs = [formData.counter_signatures];
       }
 
+      const authToken = token || localStorage.getItem('trustchain_token');
       const res = await fetch(`${BASE_URL}/products/transfer`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {})
+        },
         body: JSON.stringify({
           ...formData,
           latitude: parseFloat(formData.latitude),
